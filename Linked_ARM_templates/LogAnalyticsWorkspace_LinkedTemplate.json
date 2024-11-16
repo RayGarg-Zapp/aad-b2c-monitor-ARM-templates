@@ -1,0 +1,63 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "location": {
+      "type": "string",
+      "defaultValue": "East US",
+      "allowedValues": [
+        "East US",
+        "East US 2",
+        "West US",
+        "West Europe",
+        "North Europe"
+      ],
+      "metadata": {
+        "description": "Location for the Log Analytics Workspaces."
+      }
+    }
+  },
+  "resources": [
+    {
+      "type": "Microsoft.OperationalInsights/workspaces",
+      "apiVersion": "2020-08-01",
+      "location": "[parameters('location')]",
+      "name": "LogAnalytics-Identity-B2C",
+      "sku": {
+        "name": "PerGB2018"
+      }
+    },
+    {
+      "type": "Microsoft.OperationalInsights/workspaces",
+      "apiVersion": "2020-08-01",
+      "location": "[parameters('location')]",
+      "name": "LogAnalytics-Applications",
+      "sku": {
+        "name": "PerGB2018"
+      }
+    },
+    {
+      "type": "Microsoft.OperationalInsights/workspaces",
+      "apiVersion": "2020-08-01",
+      "location": "[parameters('location')]",
+      "name": "LogAnalytics-Databases",
+      "sku": {
+        "name": "PerGB2018"
+      }
+    }
+  ],
+  "outputs": {
+    "workspaceIdentityId": {
+      "type": "string",
+      "value": "[resourceId('Microsoft.OperationalInsights/workspaces', 'LogAnalytics-Identity-B2C')]"
+    },
+    "workspaceApplicationsId": {
+      "type": "string",
+      "value": "[resourceId('Microsoft.OperationalInsights/workspaces', 'LogAnalytics-Applications')]"
+    },
+    "workspaceDatabasesId": {
+      "type": "string",
+      "value": "[resourceId('Microsoft.OperationalInsights/workspaces', 'LogAnalytics-Databases')]"
+    }
+  }
+}
