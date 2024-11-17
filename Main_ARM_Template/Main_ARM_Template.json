@@ -19,9 +19,35 @@
     },
     "linuxFxVersion": {
       "type": "string",
-      "defaultValue": "php|7.0",
+      "defaultValue": "DOTNETCORE|8.0",
       "metadata": {
-        "description": "The Runtime stack of current web app."
+        "description": "The Runtime stack of the current web app."
+      }
+    },
+    "existingAppRegistrationClientId": {
+      "type": "string",
+      "metadata": {
+        "description": "Client ID of the existing Azure AD B2C app registration."
+      }
+    },
+    "existingAppRegistrationTenantId": {
+      "type": "string",
+      "metadata": {
+        "description": "Tenant ID of the existing Azure AD B2C directory."
+      }
+    },
+    "useExistingLogAnalyticsWorkspace": {
+      "type": "bool",
+      "defaultValue": false,
+      "metadata": {
+        "description": "Set to true if you want to use an existing Log Analytics workspace."
+      }
+    },
+    "existingLogAnalyticsWorkspaceId": {
+      "type": "string",
+      "defaultValue": "",
+      "metadata": {
+        "description": "Resource ID of the existing Log Analytics workspace, if applicable."
       }
     }
   },
@@ -54,12 +80,10 @@
       }
     },
     {
+      "condition": "[not(parameters('useExistingLogAnalyticsWorkspace'))]",
       "name": "Deploy_LogAnalyticsWorkspace",
       "type": "Microsoft.Resources/deployments",
       "apiVersion": "2022-09-01",
-      "dependsOn": [
-        "[resourceId('Microsoft.Resources/deployments', 'Deploy_StorageAccount')]"
-      ],
       "properties": {
         "mode": "Incremental",
         "templateLink": {
@@ -80,7 +104,7 @@
       "type": "Microsoft.Resources/deployments",
       "apiVersion": "2022-09-01",
       "dependsOn": [
-        "[resourceId('Microsoft.Resources/deployments', 'Deploy_LogAnalyticsWorkspace')]"
+        "[if(parameters('useExistingLogAnalyticsWorkspace'), parameters('existingLogAnalyticsWorkspaceId'), resourceId('Microsoft.Resources/deployments', 'Deploy_LogAnalyticsWorkspace'))]"
       ],
       "properties": {
         "mode": "Incremental",
@@ -101,9 +125,6 @@
       "name": "Deploy_LogicApp",
       "type": "Microsoft.Resources/deployments",
       "apiVersion": "2022-09-01",
-      "dependsOn": [
-        "[resourceId('Microsoft.Resources/deployments', 'Deploy_AutomationAccount')]"
-      ],
       "properties": {
         "mode": "Incremental",
         "templateLink": {
@@ -163,7 +184,7 @@
     },
     "logAnalyticsWorkspaceId": {
       "type": "string",
-      "value": "[resourceId('Microsoft.OperationalInsights/workspaces', variables('logAnalyticsWorkspaceName'))]"
+      "value": "[if(parameters('useExistingLogAnalyticsWorkspace'), parameters('existingLogAnalyticsWorkspaceId'), resourceId('Microsoft.OperationalInsights/workspaces', variables('logAnalyticsWorkspaceName')))]"
     },
     "automationAccountName": {
       "type": "string",
