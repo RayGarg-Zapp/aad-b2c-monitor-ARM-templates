@@ -2,156 +2,176 @@
   "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
   "contentVersion": "1.0.0.0",
   "parameters": {
-    "rgName": {
+    "projectName": {
       "type": "string",
-      "defaultValue": "RG-AzureAD-B2C-Monitoring",
+      "minLength": 3,
+      "maxLength": 11,
       "metadata": {
-        "description": "Name of the Resource Group to create or use."
+        "description": "Specify a project name that is used to generate resource names."
       }
     },
-    "rgLocation": {
+    "location": {
       "type": "string",
-      "defaultValue": "East US",
-      "allowedValues": [
-        "East US",
-        "East US 2",
-        "West US",
-        "West Europe",
-        "North Europe"
-      ],
+      "defaultValue": "[resourceGroup().location]",
       "metadata": {
-        "description": "Location for all resources. Choose from the list of allowed locations."
+        "description": "Specify a location for the resources."
       }
     },
-    "logAnalyticsLinkedTemplateURL": {
+    "linuxFxVersion": {
       "type": "string",
+      "defaultValue": "php|7.0",
       "metadata": {
-        "description": "URL to the Log Analytics Workspace Linked Template."
-      }
-    },
-    "storageAccountsLinkedTemplateURL": {
-      "type": "string",
-      "metadata": {
-        "description": "URL to the Storage Accounts Linked Template."
-      }
-    },
-    "applicationsLinkedTemplateURL": {
-      "type": "string",
-      "metadata": {
-        "description": "URL to the Applications Linked Template."
-      }
-    },
-    "databasesLinkedTemplateURL": {
-      "type": "string",
-      "metadata": {
-        "description": "URL to the Databases Linked Template."
-      }
-    },
-    "automationAccountsLogicAppsLinkedTemplateURL": {
-      "type": "string",
-      "metadata": {
-        "description": "URL to the Automation Accounts and Logic Apps Linked Template."
+        "description": "The Runtime stack of current web app."
       }
     }
   },
   "variables": {
-    "resourceGroupID": "[resourceId('Microsoft.Resources/resourceGroups', parameters('rgName'))]"
+    "storageAccountName": "[concat(parameters('projectName'), uniqueString(resourceGroup().id))]",
+    "webAppName": "[concat(parameters('projectName'), 'WebApp')]",
+    "appServicePlanName": "[concat(parameters('projectName'), 'Plan')]",
+    "logAnalyticsWorkspaceName": "[concat(parameters('projectName'), 'LogAnalytics')]",
+    "automationAccountName": "[concat(parameters('projectName'), 'AutomationAccount')]",
+    "logicAppName": "[concat(parameters('projectName'), 'LogicApp')]"
   },
   "resources": [
     {
-      "type": "Microsoft.Resources/resourceGroups",
-      "apiVersion": "2021-04-01",
-      "location": "[parameters('rgLocation')]",
-      "name": "[parameters('rgName')]",
-      "tags": {
-        "environment": "demo",
-        "project": "AzureAD-B2C-Monitoring"
-      }
-    },
-    {
+      "name": "Deploy_StorageAccount",
       "type": "Microsoft.Resources/deployments",
-      "apiVersion": "2021-04-01",
-      "name": "Deploy_LogAnalyticsWorkspaces",
-      "dependsOn": [
-        "[variables('resourceGroupID')]"
-      ],
+      "apiVersion": "2022-09-01",
       "properties": {
         "mode": "Incremental",
         "templateLink": {
-          "uri": "[parameters('logAnalyticsLinkedTemplateURL')]",
-          "contentVersion": "1.0.0.0"
+          "relativePath": "../Linked_ARM_Templates/linkedStorageAccount.json"
+        },
+        "parameters": {
+          "storageAccountName": {
+            "value": "[variables('storageAccountName')]"
+          },
+          "location": {
+            "value": "[parameters('location')]"
+          }
         }
       }
     },
     {
+      "name": "Deploy_LogAnalyticsWorkspace",
       "type": "Microsoft.Resources/deployments",
-      "apiVersion": "2021-04-01",
-      "name": "Deploy_StorageAccounts",
+      "apiVersion": "2022-09-01",
       "dependsOn": [
-        "[variables('resourceGroupID')]",
-        "[resourceId('Microsoft.Resources/deployments', 'Deploy_LogAnalyticsWorkspaces')]"
+        "[resourceId('Microsoft.Resources/deployments', 'Deploy_StorageAccount')]"
       ],
       "properties": {
         "mode": "Incremental",
         "templateLink": {
-          "uri": "[parameters('storageAccountsLinkedTemplateURL')]",
-          "contentVersion": "1.0.0.0"
+          "relativePath": "../Linked_ARM_Templates/linkedLogAnalyticsWorkspace.json"
+        },
+        "parameters": {
+          "workspaceName": {
+            "value": "[variables('logAnalyticsWorkspaceName')]"
+          },
+          "location": {
+            "value": "[parameters('location')]"
+          }
         }
       }
     },
     {
+      "name": "Deploy_AutomationAccount",
       "type": "Microsoft.Resources/deployments",
-      "apiVersion": "2021-04-01",
-      "name": "Deploy_Applications",
+      "apiVersion": "2022-09-01",
       "dependsOn": [
-        "[variables('resourceGroupID')]",
-        "[resourceId('Microsoft.Resources/deployments', 'Deploy_StorageAccounts')]"
+        "[resourceId('Microsoft.Resources/deployments', 'Deploy_LogAnalyticsWorkspace')]"
       ],
       "properties": {
         "mode": "Incremental",
         "templateLink": {
-          "uri": "[parameters('applicationsLinkedTemplateURL')]",
-          "contentVersion": "1.0.0.0"
+          "relativePath": "../Linked_ARM_Templates/linkedAutomationAccount.json"
+        },
+        "parameters": {
+          "automationAccountName": {
+            "value": "[variables('automationAccountName')]"
+          },
+          "location": {
+            "value": "[parameters('location')]"
+          }
         }
       }
     },
     {
+      "name": "Deploy_LogicApp",
       "type": "Microsoft.Resources/deployments",
-      "apiVersion": "2021-04-01",
-      "name": "Deploy_Databases",
+      "apiVersion": "2022-09-01",
       "dependsOn": [
-        "[variables('resourceGroupID')]",
-        "[resourceId('Microsoft.Resources/deployments', 'Deploy_Applications')]"
+        "[resourceId('Microsoft.Resources/deployments', 'Deploy_AutomationAccount')]"
       ],
       "properties": {
         "mode": "Incremental",
         "templateLink": {
-          "uri": "[parameters('databasesLinkedTemplateURL')]",
-          "contentVersion": "1.0.0.0"
+          "relativePath": "../Linked_ARM_Templates/linkedLogicApp.json"
+        },
+        "parameters": {
+          "logicAppName": {
+            "value": "[variables('logicAppName')]"
+          },
+          "location": {
+            "value": "[parameters('location')]"
+          }
         }
       }
     },
     {
-      "type": "Microsoft.Resources/deployments",
-      "apiVersion": "2021-04-01",
-      "name": "Deploy_AutomationAccounts_LogicApps",
-      "dependsOn": [
-        "[variables('resourceGroupID')]",
-        "[resourceId('Microsoft.Resources/deployments', 'Deploy_Databases')]"
-      ],
+      "type": "Microsoft.Web/serverfarms",
+      "apiVersion": "2022-09-01",
+      "name": "[variables('appServicePlanName')]",
+      "location": "[parameters('location')]",
+      "sku": {
+        "name": "B1",
+        "tier": "Basic",
+        "size": "B1",
+        "family": "B",
+        "capacity": 1
+      },
+      "kind": "linux",
       "properties": {
-        "mode": "Incremental",
-        "templateLink": {
-          "uri": "[parameters('automationAccountsLogicAppsLinkedTemplateURL')]",
-          "contentVersion": "1.0.0.0"
+        "perSiteScaling": false,
+        "reserved": true,
+        "targetWorkerCount": 0,
+        "targetWorkerSizeId": 0
+      }
+    },
+    {
+      "type": "Microsoft.Web/sites",
+      "apiVersion": "2022-09-01",
+      "name": "[variables('webAppName')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.Web/serverfarms', variables('appServicePlanName'))]"
+      ],
+      "kind": "app",
+      "properties": {
+        "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', variables('appServicePlanName'))]",
+        "siteConfig": {
+          "linuxFxVersion": "[parameters('linuxFxVersion')]"
         }
       }
     }
   ],
   "outputs": {
-    "deploymentStatus": {
+    "storageEndpoint": {
+      "type": "object",
+      "value": "[reference('Deploy_StorageAccount').outputs.storageEndpoint.value]"
+    },
+    "logAnalyticsWorkspaceId": {
       "type": "string",
-      "value": "Deployment completed for Resource Group: [parameters('rgName')]"
+      "value": "[resourceId('Microsoft.OperationalInsights/workspaces', variables('logAnalyticsWorkspaceName'))]"
+    },
+    "automationAccountName": {
+      "type": "string",
+      "value": "[variables('automationAccountName')]"
+    },
+    "logicAppName": {
+      "type": "string",
+      "value": "[variables('logicAppName')]"
     }
   }
 }
