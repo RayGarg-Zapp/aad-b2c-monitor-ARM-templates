@@ -34,10 +34,10 @@
       "apiVersion": "2022-10-01",
       "name": "[parameters('workspaceName')]",
       "location": "[parameters('location')]",
+      "sku": {
+        "name": "[parameters('pricingTier')]"
+      },
       "properties": {
-        "sku": {
-          "name": "[parameters('pricingTier')]"
-        },
         "retentionInDays": 30
       }
     }

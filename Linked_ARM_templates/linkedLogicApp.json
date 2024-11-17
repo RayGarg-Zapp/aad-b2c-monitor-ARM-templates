@@ -22,7 +22,30 @@
       "name": "[parameters('logicAppName')]",
       "location": "[parameters('location')]",
       "properties": {
-        "definition": {},
+        "definition": {
+          "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+          "actions": {
+            "manualTrigger": {
+              "type": "Http",
+              "inputs": {
+                "method": "GET",
+                "uri": "https://example.com/sample-endpoint"
+              },
+              "runAfter": {}
+            }
+          },
+          "triggers": {
+            "manual": {
+              "type": "Request",
+              "kind": "Http",
+              "inputs": {
+                "method": "GET",
+                "schema": {}
+              }
+            }
+          },
+          "outputs": {}
+        },
         "parameters": {}
       }
     }

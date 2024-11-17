@@ -50,7 +50,7 @@
   "outputs": {
     "storageEndpoint": {
       "type": "object",
-      "value": "[reference(parameters('storageAccountName')).primaryEndpoints]"
+      "value": "[reference(resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName'))).primaryEndpoints]"
     }
   }
 }
