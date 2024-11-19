@@ -21,7 +21,7 @@ function Get-ValidInput {
 }
 
 # Get project-specific variables from the user with proper validation
-$projectName = Get-ValidInput -prompt "Enter a relevant project name" -defaultValue "storearmtemplatesaadb2c"
+$projectName = Get-ValidInput -prompt "Enter a relevant project name" -defaultValue "storearmsaadb2c"
 $location = Get-ValidInput -prompt "Enter the location for the resources" -defaultValue "eastus"
 
 $storageAccountName = $projectName + "store"
