@@ -1,5 +1,5 @@
 # Load configuration from the first script to maintain consistency
-$configFilePath = "$home/armDeploymentConfig.json"   # Adjusted to match the filename from script 1
+$configFilePath = "$home/armDeploymentConfig.json"   # Use Unix-based path format for compatibility
 
 if (-Not (Test-Path -Path $configFilePath)) {
     Write-Error "Configuration file not found at path $configFilePath. Please make sure the first script has been run to create the storage account and container."
@@ -34,10 +34,10 @@ $plainTextSqlPassword = [System.Runtime.InteropServices.Marshal]::PtrToStringAut
 $key = (Get-AzStorageAccountKey -ResourceGroupName $resourceGroupName -Name $storageAccountName).Value[0]
 $context = New-AzStorageContext -StorageAccountName $storageAccountName -StorageAccountKey $key
 
-# Generate SAS token for the container with 2-hour validity
+# Generate SAS token for the container with 2-hour validity (for container-level access)
 $sasToken = New-AzStorageContainerSASToken -Context $context -Container $containerName -Permission r -ExpiryTime (Get-Date).AddHours(2.0)
 
-# Construct the main template URI correctly
+# Construct the main template URI correctly with SAS Token
 $blobEndPoint = $context.BlobEndPoint.TrimEnd('/')
 $mainTemplateUri = "$blobEndPoint/$containerName/Main_ARM_Template.json?$sasToken"
 
@@ -60,7 +60,7 @@ try {
             "sqlAdminUsername" = $sqlAdminUsername;
             "sqlAdminPassword" = $plainTextSqlPassword;
             "databaseName" = $databaseName;
-            "sasToken" = $sasToken  # Add SAS token to be used for linked templates
+            "sasToken" = "?$sasToken"
         } `
         -Verbose
 }
