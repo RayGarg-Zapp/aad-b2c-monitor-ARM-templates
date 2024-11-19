@@ -42,25 +42,36 @@
         "description": "Tenant ID of the existing Azure AD B2C directory."
       }
     },
-    "useExistingLogAnalyticsWorkspace": {
-      "type": "bool",
-      "defaultValue": false,
+    "sqlServerName": {
+      "type": "string",
       "metadata": {
-        "description": "Set to true if you want to use an existing Log Analytics workspace."
+        "description": "The name of the SQL Server instance."
       }
     },
-    "existingLogAnalyticsWorkspaceId": {
+    "sqlAdminUsername": {
       "type": "string",
-      "defaultValue": "",
       "metadata": {
-        "description": "Resource ID of the existing Log Analytics workspace, if applicable."
+        "description": "The administrator username for the SQL server."
+      }
+    },
+    "sqlAdminPassword": {
+      "type": "string",
+      "metadata": {
+        "description": "The administrator password for the SQL server."
+      }
+    },
+    "databaseName": {
+      "type": "string",
+      "metadata": {
+        "description": "The name of the SQL Database."
       }
     }
   },
   "variables": {
     "storageAccountName": "[concat(parameters('projectName'), uniqueString(resourceGroup().id))]",
     "appServicePlanName": "[concat(parameters('projectName'), 'Plan')]",
-    "logAnalyticsWorkspaceName": "[concat(parameters('projectName'), 'LogAnalytics')]",
+    "logAnalyticsWorkspaceName1": "[concat(parameters('projectName'), 'LogAnalyticsApp')]",
+    "logAnalyticsWorkspaceName2": "[concat(parameters('projectName'), 'LogAnalyticsDB')]",
     "automationAccountName": "[concat(parameters('projectName'), 'AutomationAccount')]",
     "logicAppName": "[concat(parameters('projectName'), 'LogicApp')]"
   },
@@ -85,8 +96,7 @@
       }
     },
     {
-      "condition": "[not(parameters('useExistingLogAnalyticsWorkspace'))]",
-      "name": "Deploy_LogAnalyticsWorkspace",
+      "name": "Deploy_LogAnalyticsWorkspace_App",
       "type": "Microsoft.Resources/deployments",
       "apiVersion": "2022-09-01",
       "properties": {
@@ -96,7 +106,7 @@
         },
         "parameters": {
           "workspaceName": {
-            "value": "[variables('logAnalyticsWorkspaceName')]"
+            "value": "[variables('logAnalyticsWorkspaceName1')]"
           },
           "location": {
             "value": "[parameters('location')]"
@@ -105,20 +115,17 @@
       }
     },
     {
-      "name": "Deploy_AutomationAccount",
+      "name": "Deploy_LogAnalyticsWorkspace_DB",
       "type": "Microsoft.Resources/deployments",
       "apiVersion": "2022-09-01",
-      "dependsOn": [
-        "[if(parameters('useExistingLogAnalyticsWorkspace'), parameters('existingLogAnalyticsWorkspaceId'), resourceId('Microsoft.Resources/deployments', 'Deploy_LogAnalyticsWorkspace'))]"
-      ],
       "properties": {
         "mode": "Incremental",
         "templateLink": {
-          "relativePath": "linkedAutomationAccount.json"
+          "relativePath": "linkedLogAnalyticsWorkspace.json"
         },
         "parameters": {
-          "automationAccountName": {
-            "value": "[variables('automationAccountName')]"
+          "workspaceName": {
+            "value": "[variables('logAnalyticsWorkspaceName2')]"
           },
           "location": {
             "value": "[parameters('location')]"
@@ -127,17 +134,26 @@
       }
     },
     {
-      "name": "Deploy_LogicApp",
+      "name": "Deploy_SQLDatabase",
       "type": "Microsoft.Resources/deployments",
       "apiVersion": "2022-09-01",
       "properties": {
         "mode": "Incremental",
         "templateLink": {
-          "relativePath": "linkedLogicApp.json"
+          "relativePath": "linkedSQLDatabase.json"
         },
         "parameters": {
-          "logicAppName": {
-            "value": "[variables('logicAppName')]"
+          "sqlServerName": {
+            "value": "[parameters('sqlServerName')]"
+          },
+          "sqlAdminUsername": {
+            "value": "[parameters('sqlAdminUsername')]"
+          },
+          "sqlAdminPassword": {
+            "value": "[parameters('sqlAdminPassword')]"
+          },
+          "databaseName": {
+            "value": "[parameters('databaseName')]"
           },
           "location": {
             "value": "[parameters('location')]"
@@ -187,10 +203,6 @@
       "type": "object",
       "value": "[reference('Deploy_StorageAccount').outputs.storageEndpoint.value]"
     },
-    "logAnalyticsWorkspaceId": {
-      "type": "string",
-      "value": "[if(parameters('useExistingLogAnalyticsWorkspace'), parameters('existingLogAnalyticsWorkspaceId'), resourceId('Microsoft.OperationalInsights/workspaces', variables('logAnalyticsWorkspaceName')))]"
-    },
     "automationAccountName": {
       "type": "string",
       "value": "[variables('automationAccountName')]"
@@ -198,6 +210,10 @@
     "logicAppName": {
       "type": "string",
       "value": "[variables('logicAppName')]"
+    },
+    "databaseId": {
+      "type": "string",
+      "value": "[reference('Deploy_SQLDatabase').outputs.databaseId]"
     }
   }
 }
