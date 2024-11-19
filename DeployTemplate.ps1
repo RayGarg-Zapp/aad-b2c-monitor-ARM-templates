@@ -1,5 +1,5 @@
 # Load configuration from the first script to maintain consistency
-$configFilePath = "$home\deploymentConfig.json"
+$configFilePath = "$home/deploymentConfig.json"   # Use forward slashes for Unix-based systems
 
 if (-Not (Test-Path -Path $configFilePath)) {
     Write-Error "Configuration file not found at path $configFilePath. Please make sure the first script has been run to create the storage account and container."
@@ -52,7 +52,7 @@ try {
             "location" = $location;
             "webAppName" = $webAppName;
             "sqlServerName" = $sqlServerName;
-            "sqlAdminUsername" = (ConvertFrom-SecureString $sqlAdminPassword -AsPlainText);
+            "sqlAdminUsername" = $sqlAdminUsername;
             "sqlAdminPassword" = $sqlAdminPassword;
             "databaseName" = $databaseName;
         } `

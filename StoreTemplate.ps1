@@ -114,7 +114,7 @@ Set-AzStorageBlobContent -Container $containerName -File "$home/$linkedFileSQLDa
 Write-Host "Templates uploaded successfully. Press [ENTER] to continue ..."
 
 # Save configuration to JSON file for use in Script 2
-$configPath = "$home/armDeploymentConfig.json"
+$configPath = "$home/deploymentConfig.json"   # Update to match what is used in Script 2
 $config = @{
     projectName = $projectName
     location = $location
@@ -127,3 +127,4 @@ $config = @{
 $config | ConvertTo-Json | Set-Content -Path $configPath
 
 Write-Host "Configuration saved to $configPath."
+
