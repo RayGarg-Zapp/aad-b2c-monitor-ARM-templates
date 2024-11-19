@@ -2,10 +2,10 @@
   "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
   "contentVersion": "1.0.0.0",
   "parameters": {
-    "storageAccountName": {
+    "projectName": {
       "type": "string",
       "metadata": {
-        "description": "Specify the storage account name."
+        "description": "Specify the project name for unique naming of resources."
       }
     },
     "location": {
@@ -32,11 +32,14 @@
       }
     }
   },
+  "variables": {
+    "uniqueStorageAccountName": "[concat(parameters('projectName'), 'store', uniqueString(resourceGroup().id))]"
+  },
   "resources": [
     {
       "type": "Microsoft.Storage/storageAccounts",
       "apiVersion": "2023-01-01",
-      "name": "[parameters('storageAccountName')]",
+      "name": "[variables('uniqueStorageAccountName')]",
       "location": "[parameters('location')]",
       "sku": {
         "name": "[parameters('storageSKU')]"
@@ -48,9 +51,13 @@
     }
   ],
   "outputs": {
+    "storageAccountName": {
+      "type": "string",
+      "value": "[variables('uniqueStorageAccountName')]"
+    },
     "storageEndpoint": {
       "type": "object",
-      "value": "[reference(resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName'))).primaryEndpoints]"
+      "value": "[reference(resourceId('Microsoft.Storage/storageAccounts', variables('uniqueStorageAccountName'))).primaryEndpoints]"
     }
   }
 }

@@ -30,18 +30,6 @@
         "description": "The Runtime stack of the current web app."
       }
     },
-    "existingAppRegistrationClientId": {
-      "type": "string",
-      "metadata": {
-        "description": "Client ID of the existing Azure AD B2C app registration."
-      }
-    },
-    "existingAppRegistrationTenantId": {
-      "type": "string",
-      "metadata": {
-        "description": "Tenant ID of the existing Azure AD B2C directory."
-      }
-    },
     "sqlServerName": {
       "type": "string",
       "metadata": {
@@ -55,7 +43,7 @@
       }
     },
     "sqlAdminPassword": {
-      "type": "string",
+      "type": "securestring",
       "metadata": {
         "description": "The administrator password for the SQL server."
       }
@@ -68,7 +56,7 @@
     }
   },
   "variables": {
-    "storageAccountName": "[concat(parameters('projectName'), uniqueString(resourceGroup().id))]",
+    "uniqueStorageAccountName": "[concat(parameters('projectName'), 'store', uniqueString(resourceGroup().id))]",
     "appServicePlanName": "[concat(parameters('projectName'), 'Plan')]",
     "logAnalyticsWorkspaceName1": "[concat(parameters('projectName'), 'LogAnalyticsApp')]",
     "logAnalyticsWorkspaceName2": "[concat(parameters('projectName'), 'LogAnalyticsDB')]",
@@ -87,7 +75,7 @@
         },
         "parameters": {
           "storageAccountName": {
-            "value": "[variables('storageAccountName')]"
+            "value": "[variables('uniqueStorageAccountName')]"
           },
           "location": {
             "value": "[parameters('location')]"
