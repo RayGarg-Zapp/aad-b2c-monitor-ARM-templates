@@ -1,5 +1,5 @@
 # Load configuration from the first script to maintain consistency
-$configFilePath = "$home/deploymentConfig.json"   # Use forward slashes for Unix-based systems
+$configFilePath = "$home/armDeploymentConfig.json"   # Adjusted to match the filename from script 1
 
 if (-Not (Test-Path -Path $configFilePath)) {
     Write-Error "Configuration file not found at path $configFilePath. Please make sure the first script has been run to create the storage account and container."
@@ -60,6 +60,7 @@ try {
             "sqlAdminUsername" = $sqlAdminUsername;
             "sqlAdminPassword" = $plainTextSqlPassword;
             "databaseName" = $databaseName;
+            "sasToken" = $sasToken  # Add SAS token to be used for linked templates
         } `
         -Verbose
 }

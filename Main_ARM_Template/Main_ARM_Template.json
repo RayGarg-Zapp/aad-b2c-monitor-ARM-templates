@@ -53,6 +53,12 @@
       "metadata": {
         "description": "The name of the SQL Database."
       }
+    },
+    "sasToken": {
+      "type": "string",
+      "metadata": {
+        "description": "The SAS token used to access the linked templates."
+      }
     }
   },
   "variables": {
@@ -71,7 +77,7 @@
       "properties": {
         "mode": "Incremental",
         "templateLink": {
-          "relativePath": "linkedStorageAccount.json"
+          "uri": "[concat('https://', variables('uniqueStorageAccountName'), '.blob.core.windows.net/', 'armtemplates/linkedStorageAccount.json', parameters('sasToken'))]"
         },
         "parameters": {
           "storageAccountName": {
@@ -90,7 +96,7 @@
       "properties": {
         "mode": "Incremental",
         "templateLink": {
-          "relativePath": "linkedLogAnalyticsWorkspace.json"
+          "uri": "[concat('https://', variables('uniqueStorageAccountName'), '.blob.core.windows.net/', 'armtemplates/linkedLogAnalyticsWorkspace.json', parameters('sasToken'))]"
         },
         "parameters": {
           "workspaceName": {
@@ -109,7 +115,7 @@
       "properties": {
         "mode": "Incremental",
         "templateLink": {
-          "relativePath": "linkedLogAnalyticsWorkspace.json"
+          "uri": "[concat('https://', variables('uniqueStorageAccountName'), '.blob.core.windows.net/', 'armtemplates/linkedLogAnalyticsWorkspace.json', parameters('sasToken'))]"
         },
         "parameters": {
           "workspaceName": {
@@ -128,7 +134,7 @@
       "properties": {
         "mode": "Incremental",
         "templateLink": {
-          "relativePath": "linkedSQLDatabase.json"
+          "uri": "[concat('https://', variables('uniqueStorageAccountName'), '.blob.core.windows.net/', 'armtemplates/linkedSQLDatabase.json', parameters('sasToken'))]"
         },
         "parameters": {
           "sqlServerName": {
