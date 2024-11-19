@@ -25,6 +25,11 @@ $sqlAdminUsername = Read-Host -Prompt "Enter the SQL Admin Username"
 $sqlAdminPassword = Read-Host -Prompt "Enter the SQL Admin Password (this is secure)" -AsSecureString
 $databaseName = Read-Host -Prompt "Enter the name of the SQL Database (e.g., armtestDB)"
 
+# Convert SecureString to plain text (for deployment)
+$plainTextSqlPassword = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto(
+    [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($sqlAdminPassword)
+)
+
 # Retrieve the storage account key and create a storage context
 $key = (Get-AzStorageAccountKey -ResourceGroupName $resourceGroupName -Name $storageAccountName).Value[0]
 $context = New-AzStorageContext -StorageAccountName $storageAccountName -StorageAccountKey $key
@@ -53,7 +58,7 @@ try {
             "webAppName" = $webAppName;
             "sqlServerName" = $sqlServerName;
             "sqlAdminUsername" = $sqlAdminUsername;
-            "sqlAdminPassword" = $sqlAdminPassword;
+            "sqlAdminPassword" = $plainTextSqlPassword;
             "databaseName" = $databaseName;
         } `
         -Verbose
