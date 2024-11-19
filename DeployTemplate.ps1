@@ -1,5 +1,5 @@
 # Load configuration from the first script to maintain consistency
-$configFilePath = "$home/armDeploymentConfig.json"   # Use Unix-based path format for compatibility
+$configFilePath = "$home/deploymentConfig.json"   # Use Unix-based path format for compatibility
 
 if (-Not (Test-Path -Path $configFilePath)) {
     Write-Error "Configuration file not found at path $configFilePath. Please make sure the first script has been run to create the storage account and container."
