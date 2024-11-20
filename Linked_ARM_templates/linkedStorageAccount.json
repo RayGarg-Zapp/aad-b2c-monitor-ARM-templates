@@ -2,47 +2,27 @@
   "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
   "contentVersion": "1.0.0.0",
   "parameters": {
-    "projectName": {
+    "storageAccountName": {
       "type": "string",
       "metadata": {
-        "description": "Specify the project name for unique naming of resources."
+        "description": "Specify the name of the storage account."
       }
     },
     "location": {
       "type": "string",
       "metadata": {
-        "description": "Specify a location for the resources."
-      }
-    },
-    "storageSKU": {
-      "type": "string",
-      "defaultValue": "Standard_LRS",
-      "allowedValues": [
-        "Standard_LRS",
-        "Standard_GRS",
-        "Standard_RAGRS",
-        "Standard_ZRS",
-        "Premium_LRS",
-        "Premium_ZRS",
-        "Standard_GZRS",
-        "Standard_RAGZRS"
-      ],
-      "metadata": {
-        "description": "Specify the storage account type."
+        "description": "Specify the location for the storage account."
       }
     }
-  },
-  "variables": {
-    "uniqueStorageAccountName": "[concat(parameters('projectName'), 'store', uniqueString(resourceGroup().id))]"
   },
   "resources": [
     {
       "type": "Microsoft.Storage/storageAccounts",
-      "apiVersion": "2023-01-01",
-      "name": "[variables('uniqueStorageAccountName')]",
+      "apiVersion": "2021-09-01",
+      "name": "[parameters('storageAccountName')]",
       "location": "[parameters('location')]",
       "sku": {
-        "name": "[parameters('storageSKU')]"
+        "name": "Standard_LRS"
       },
       "kind": "StorageV2",
       "properties": {
@@ -51,13 +31,9 @@
     }
   ],
   "outputs": {
-    "storageAccountName": {
+    "storageAccountId": {
       "type": "string",
-      "value": "[variables('uniqueStorageAccountName')]"
-    },
-    "storageEndpoint": {
-      "type": "object",
-      "value": "[reference(resourceId('Microsoft.Storage/storageAccounts', variables('uniqueStorageAccountName'))).primaryEndpoints]"
+      "value": "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName'))]"
     }
   }
 }

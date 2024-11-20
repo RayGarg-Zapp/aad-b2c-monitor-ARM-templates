@@ -1,29 +1,24 @@
-# Load configuration from the first script to maintain consistency
-$configFilePath = "$home/deploymentConfig.json"   # Use Unix-based path format for compatibility
+# Prompt user for project name (must be <= 11 characters)
+$projectName = Read-Host -Prompt "Enter the project name (<= 11 characters):"   # Enter project name (e.g., "armtest")
 
-if (-Not (Test-Path -Path $configFilePath)) {
-    Write-Error "Configuration file not found at path $configFilePath. Please make sure the first script has been run to create the storage account and container."
-    exit
-}
+# Define key names for Azure resources
+$resourceGroupName = "TestRGaadB2CARM"
 
-# Read and parse the configuration file
-$config = Get-Content -Path $configFilePath | ConvertFrom-Json
+# Prompt user for region (location) to use for the deployment
+$location = Read-Host -Prompt "Enter a valid region for deployment (e.g., East US, West US, Central US):"
 
-# Extract values from the config file
-$projectName = $config.projectName
-$resourceGroupName = $config.resourceGroupName
-$location = $config.location
-$storageAccountName = $config.storageAccountName
-$containerName = $config.containerName
+# Storage account and container details
+$storageAccountName = "armmmstore"   # Hardcoded based on your updated information
+$containerName = "armmmtemplates"    # Hardcoded based on your updated information
 
 # Prompt for a unique web app name
 $webAppName = Read-Host -Prompt "Enter a unique web app name (e.g., armtestWebApp123)"
 
 # Prompt for SQL Server details
-$sqlServerName = Read-Host -Prompt "Enter a unique SQL Server name (e.g., armtestSQLServer)"
+$sqlServerName = Read-Host -Prompt "Enter a unique SQL Server name (e.g., armmSQLServer)"
 $sqlAdminUsername = Read-Host -Prompt "Enter the SQL Admin Username"
 $sqlAdminPassword = Read-Host -Prompt "Enter the SQL Admin Password (this is secure)" -AsSecureString
-$databaseName = Read-Host -Prompt "Enter the name of the SQL Database (e.g., armtestDB)"
+$databaseName = Read-Host -Prompt "Enter the name of the SQL Database (e.g., armmDB)"
 
 # Convert SecureString to plain text (for deployment)
 $plainTextSqlPassword = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto(
@@ -34,34 +29,34 @@ $plainTextSqlPassword = [System.Runtime.InteropServices.Marshal]::PtrToStringAut
 $key = (Get-AzStorageAccountKey -ResourceGroupName $resourceGroupName -Name $storageAccountName).Value[0]
 $context = New-AzStorageContext -StorageAccountName $storageAccountName -StorageAccountKey $key
 
-# Generate SAS token for the container with 2-hour validity (for container-level access)
-$sasToken = New-AzStorageContainerSASToken -Context $context -Container $containerName -Permission r -ExpiryTime (Get-Date).AddHours(2.0)
+# Generate SAS token for the container with 12-hour validity
+$sasToken = New-AzStorageContainerSASToken -Context $context -Container $containerName -Permission r -ExpiryTime (Get-Date).AddHours(12.0)
 
-# Construct the main template URI correctly with SAS Token
+# Construct the main template URI correctly
 $blobEndPoint = $context.BlobEndPoint.TrimEnd('/')
 $mainTemplateUri = "$blobEndPoint/$containerName/Main_ARM_Template.json?$sasToken"
 
 # Output the Main Template URI for verification if needed
 Write-Host "Main Template URI with SAS Token: $mainTemplateUri"
-Write-Host "Press [ENTER] after verifying the Main Template URI with SAS if it works in the browser:"
-Read-Host
 
 # Execute the deployment with linked templates
 try {
+    $deploymentParams = @{
+        "projectName"      = $projectName;
+        "location"         = $location;
+        "webAppName"       = $webAppName;
+        "sqlServerName"    = $sqlServerName;
+        "sqlAdminUsername" = $sqlAdminUsername;
+        "sqlAdminPassword" = $plainTextSqlPassword;
+        "databaseName"     = $databaseName
+    }
+
+    # Deploy to the resource group using the generated SAS token URI
     New-AzResourceGroupDeployment -Name "DeployLinkedTemplate" `
         -ResourceGroupName $resourceGroupName `
         -Location $location `
         -TemplateUri $mainTemplateUri `
-        -TemplateParameterObject @{
-            "projectName" = $projectName;
-            "location" = $location;
-            "webAppName" = $webAppName;
-            "sqlServerName" = $sqlServerName;
-            "sqlAdminUsername" = $sqlAdminUsername;
-            "sqlAdminPassword" = $plainTextSqlPassword;
-            "databaseName" = $databaseName;
-            "sasToken" = "?$sasToken"
-        } `
+        -TemplateParameterObject $deploymentParams `
         -Verbose
 }
 catch {

@@ -62,7 +62,6 @@
     }
   },
   "variables": {
-    "uniqueStorageAccountName": "[concat(parameters('projectName'), 'store', uniqueString(resourceGroup().id))]",
     "appServicePlanName": "[concat(parameters('projectName'), 'Plan')]",
     "logAnalyticsWorkspaceName1": "[concat(parameters('projectName'), 'LogAnalyticsApp')]",
     "logAnalyticsWorkspaceName2": "[concat(parameters('projectName'), 'LogAnalyticsDB')]",
@@ -77,11 +76,11 @@
       "properties": {
         "mode": "Incremental",
         "templateLink": {
-          "uri": "[concat('https://', variables('uniqueStorageAccountName'), '.blob.core.windows.net/', 'armtemplates/linkedStorageAccount.json', parameters('sasToken'))]"
+          "uri": "[concat('https://armmmstore.blob.core.windows.net/armmmtemplates/linkedStorageAccount.json?', parameters('sasToken'))]"
         },
         "parameters": {
           "storageAccountName": {
-            "value": "[variables('uniqueStorageAccountName')]"
+            "value": "[concat(parameters('projectName'), 'store')]"
           },
           "location": {
             "value": "[parameters('location')]"
@@ -96,7 +95,7 @@
       "properties": {
         "mode": "Incremental",
         "templateLink": {
-          "uri": "[concat('https://', variables('uniqueStorageAccountName'), '.blob.core.windows.net/', 'armtemplates/linkedLogAnalyticsWorkspace.json', parameters('sasToken'))]"
+          "uri": "[concat('https://armmmstore.blob.core.windows.net/armmmtemplates/linkedLogAnalyticsWorkspace.json?', parameters('sasToken'))]"
         },
         "parameters": {
           "workspaceName": {
@@ -115,7 +114,7 @@
       "properties": {
         "mode": "Incremental",
         "templateLink": {
-          "uri": "[concat('https://', variables('uniqueStorageAccountName'), '.blob.core.windows.net/', 'armtemplates/linkedLogAnalyticsWorkspace.json', parameters('sasToken'))]"
+          "uri": "[concat('https://armmmstore.blob.core.windows.net/armmmtemplates/linkedLogAnalyticsWorkspace.json?', parameters('sasToken'))]"
         },
         "parameters": {
           "workspaceName": {
@@ -134,7 +133,7 @@
       "properties": {
         "mode": "Incremental",
         "templateLink": {
-          "uri": "[concat('https://', variables('uniqueStorageAccountName'), '.blob.core.windows.net/', 'armtemplates/linkedSQLDatabase.json', parameters('sasToken'))]"
+          "uri": "[concat('https://armmmstore.blob.core.windows.net/armmmtemplates/linkedSQLDatabase.json?', parameters('sasToken'))]"
         },
         "parameters": {
           "sqlServerName": {
